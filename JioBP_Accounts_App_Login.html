@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jio-bp Accounts Manager</title>
+<style>
+:root{--navy:#17365d;--blue:#245a87;--bg:#f3f6fa;--line:#d6dee8;--green:#16794b;--red:#a52a2a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#1d2939}
+header{background:var(--navy);color:white;padding:18px}header h1{margin:0 0 5px;font-size:22px}header p{margin:0;font-size:13px}
+main{max-width:1200px;margin:auto;padding:14px}.bar,.tabs,.card{background:white;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.tabs{display:flex;gap:7px;flex-wrap:wrap}.tabs button{background:#e8eef5;color:#203a59}.tabs button.active{background:var(--navy);color:white}
+button{border:0;border-radius:7px;padding:10px 13px;background:var(--blue);color:white;font-weight:600;cursor:pointer}button.secondary{background:#e8eef5;color:#203a59}button.danger{background:var(--red)}button.success{background:var(--green)}
+h2{font-size:18px;margin:0 0 12px}.hint{font-size:12px;color:#617084;margin:-5px 0 13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:11px}.field label{display:block;font-size:12px;color:#46556a;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #c8d2df;border-radius:6px;font:14px Arial;background:#fff}.field textarea{min-height:40px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.status{font-size:12px;color:var(--green);margin-left:auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:13px}.metric{background:#f2f6fa;border:1px solid #e0e7ef;padding:12px;border-radius:8px}.metric span{display:block;color:#5e6c80;font-size:12px}.metric strong{display:block;font-size:19px;margin-top:5px;overflow-wrap:anywhere}
+table{border-collapse:collapse;width:100%;min-width:700px;background:white}th,td{padding:9px;border-bottom:1px solid #e1e7ee;text-align:left;font-size:12px}th{background:#eaf0f7;color:#203a59} .tablewrap{overflow:auto;border:1px solid var(--line);border-radius:8px}
+.recordlist{margin-top:14px}.recordlist h3{font-size:14px}.empty{color:#6b7788;padding:18px;text-align:center;background:#f8fafc}
+.hidden{display:none!important}.note{background:#fff8e6;border:1px solid #efd58b;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;margin-bottom:12px}
+@page{size:A4 landscape;margin:8mm}
+@media print{header,.bar,.tabs,.actions,.no-print,.print-report-btn{display:none!important}body{background:white;font-family:Arial,sans-serif}main{max-width:none;margin:0;padding:0}.note{display:none!important}.card{border:0;padding:0;margin:0}.panel{display:none!important}.panel.report{display:block!important}.report-panel{display:none!important}.report-panel.print-target{display:block!important}.report-panel.hidden{display:none!important}.tablewrap{overflow:visible;border:0}table{min-width:0;width:100%;table-layout:auto;page-break-inside:auto}tr{page-break-inside:avoid}th,td{font-size:8px;padding:3px;overflow-wrap:anywhere}h2{font-size:15px;margin-bottom:5px}h3{font-size:13px;margin:0 0 7px}.cards{gap:5px;margin-bottom:6px}.metric{padding:5px}.metric strong{font-size:12px}.metric span{font-size:9px}body.print-sales #reportSales,body.print-expenses #reportExpenses,body.print-purchases #reportPurchases,body.print-pl #reportPL{display:block!important}}
+
+#loginGate{position:fixed;inset:0;z-index:99999;background:#f3f6fa;display:flex;align-items:center;justify-content:center;padding:18px}
+.login-box{width:100%;max-width:420px;background:#fff;border:1px solid #d6dee8;border-radius:14px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.10)}
+.login-box h2{margin:0 0 8px;color:#17365d}.login-box p{line-height:1.45;color:#475467}.login-box label{display:block;font-weight:600;margin:12px 0 6px}.login-box input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px}.login-box button{width:100%;margin-top:16px;padding:12px}.login-warning{font-size:12px!important;background:#fff7e0;padding:10px;border-radius:8px}
+#logoutBtn{float:right;background:#fff;color:#17365d;margin-left:10px}
+@media print{#loginGate,#logoutBtn{display:none!important}}
+</style></head><body>
+<div id="loginGate"><div class="login-box"><h2 id="loginTitle">JIO-bp Accounts Manager</h2><p id="loginMessage">Set up your login to protect casual access to this page.</p><form id="loginForm"><label for="loginUser">Username</label><input id="loginUser" autocomplete="username" required><label for="loginPass">Password</label><input id="loginPass" type="password" autocomplete="current-password" required minlength="4"><div id="confirmWrap" style="display:none"><label for="loginConfirm">Confirm password</label><input id="loginConfirm" type="password" autocomplete="new-password" minlength="4"></div><button type="submit" id="loginSubmit">Set login</button><p id="loginError" style="color:#a52a2a" role="alert"></p><p class="login-warning">Important: This is a basic browser lock, not strong security. Do not use it to protect sensitive data on a public website. Keep regular backups.</p></form></div></div>
+
+<header><button id="logoutBtn" type="button">Lock / Logout</button><h1>JIO-bp Accounts Manager</h1><p>Enter each transaction separately. Records save automatically and monthly reports are generated from saved entries.</p></header>
+<main>
+<div class="note"><b>Saving your data:</b> Records are saved in this browser on this device. Use <b>Export Backup</b> often and keep the JSON file safe. Import the backup to restore it. Browser data is not cloud-synced.</div>
+<div class="bar no-print"><div class="field"><label>Report month</label><input type="month" id="month" value="2026-10"></div><button class="success" id="backup">Export Backup</button><button class="secondary" id="restore">Import Backup</button><input id="backupFile" type="file" accept=".json,application/json" hidden><button class="secondary" id="print">Print / Save Monthly PDF</button><button class="secondary" id="csv">Export Monthly Report CSV</button><button class="secondary" id="demo">Load Demo Data</button><span id="status" class="status">Autosave enabled</span></div>
+<nav class="tabs no-print">
+<button class="active" data-tab="salesForm">Enter Sales & Collection</button><button data-tab="expenseForm">Enter Expense</button><button data-tab="purchaseForm">Enter Purchase</button><button data-tab="report">Monthly Report</button>
+</nav>
+<section class="panel card" id="salesForm">
+<h2>Enter Daily Sales & Collection</h2><p class="hint">Save one daily record. If you need to correct it, enter the same date again and save to update that date.</p>
+<form id="salesEntry"><div class="grid">
+<div class="field"><label>Date</label><input type="date" name="date" required></div>
+<div class="field"><label>Diesel (HSD) sales litres</label><input type="number" step=".001" min="0" name="hsdL"></div><div class="field"><label>Diesel price ₹/L</label><input type="number" step=".001" min="0" name="hsdPrice"></div>
+<div class="field"><label>Petrol (MS) sales litres</label><input type="number" step=".001" min="0" name="msL"></div><div class="field"><label>Petrol price ₹/L</label><input type="number" step=".001" min="0" name="msPrice"></div>
+<div class="field"><label>Cash collection ₹</label><input type="number" step=".01" min="0" name="cash"></div><div class="field"><label>Card collection ₹</label><input type="number" step=".01" min="0" name="card"></div><div class="field"><label>Card batch / reference</label><input name="cardRef"></div>
+<div class="field"><label>MOPs collection ₹</label><input type="number" step=".01" min="0" name="mops"></div>
+<div class="field"><label>UPI collection ₹</label><input type="number" step=".01" min="0" name="upi"></div><div class="field"><label>UPI batch / reference</label><input name="upiRef"></div>
+<div class="field"><label>Federal account ₹</label><input type="number" step=".01" min="0" name="federal"></div><div class="field"><label>Fleet / credit ₹</label><input type="number" step=".01" min="0" name="fleet"></div>
+<div class="field"><label>Notes</label><input name="notes"></div></div>
+<div class="actions"><button type="submit">Save Sales Record</button><button type="button" class="secondary" id="loadSales">Load Saved Date</button><button type="reset" class="secondary">Clear Form</button></div></form>
+<div class="recordlist" id="salesSaved"></div></section>
+
+<section class="panel card hidden" id="expenseForm">
+<h2>Enter Expense</h2><p class="hint">Enter each expense separately, including MOPs. Multiple expenses can be added on the same date.</p>
+<form id="expenseEntry"><div class="grid">
+<div class="field"><label>Date</label><input type="date" name="date" required></div><div class="field"><label>Category</label><select name="category" required><option>Food</option><option>Coffee</option><option>Office</option><option>RO Repairs</option><option>Salaries</option><option>Land Rent</option><option>Electricity</option><option>DG Expenses</option><option>MOPs</option><option>Other Expenses</option></select></div>
+<div class="field"><label>Amount ₹</label><input type="number" name="amount" min="0" step=".01" required></div><div class="field"><label>Bill / receipt reference</label><input name="reference"></div><div class="field"><label>Remarks</label><input name="remarks"></div></div><div class="actions"><button type="submit">Save Expense</button><button type="reset" class="secondary">Clear Form</button></div></form>
+<div class="recordlist" id="expensesSaved"></div></section>
+
+<section class="panel card hidden" id="purchaseForm">
+<h2>Enter Purchase Invoice</h2><p class="hint">Enter one row per invoice/delivery. Use separate records for multiple deliveries.</p>
+<form id="purchaseEntry"><div class="grid">
+<div class="field"><label>Date</label><input type="date" name="date" required></div><div class="field"><label>Invoice number</label><input name="invoice" required></div><div class="field"><label>Product</label><select name="product"><option>HSD</option><option>MS</option></select></div>
+<div class="field"><label>Quantity (L)</label><input type="number" name="qty" min="0" step=".001" required></div><div class="field"><label>Rate ₹/quantity</label><input type="number" name="rate" min="0" step=".001" required></div><div class="field"><label>Freight invoice ₹</label><input type="number" name="freight" min="0" step=".01"></div><div class="field"><label>Charges ₹</label><input type="number" name="charges" min="0" step=".01"></div><div class="field"><label>Tax ₹</label><input type="number" name="tax" min="0" step=".01"></div><div class="field"><label>Selling price ₹/L</label><input type="number" name="sellingPrice" min="0" step=".001"></div><div class="field"><label>Supplier</label><input name="supplier"></div><div class="field"><label>Remarks</label><input name="remarks"></div></div><div class="actions"><button type="submit">Save Purchase</button><button type="reset" class="secondary">Clear Form</button></div></form>
+<div class="recordlist" id="purchasesSaved"></div></section>
+
+<section class="panel card hidden" id="report">
+<h2>Monthly Report</h2><p class="hint">This report combines saved entries for the selected month. Change the month above to view another month.</p>
+<div class="grid no-print" style="margin-bottom:12px">
+<div class="field"><label>Average HSD commission ₹/L</label><input type="number" id="hsdAvgCommission" min="0" step=".001" placeholder="Enter monthly average"></div>
+<div class="field"><label>Average MS commission ₹/L</label><input type="number" id="msAvgCommission" min="0" step=".001" placeholder="Enter monthly average"></div>
+<div class="field"><label>Opening HSD stock (L)</label><input type="number" id="openingHsd" min="0" step=".001" placeholder="Opening stock"></div>
+<div class="field"><label>Closing HSD stock (L)</label><input type="number" id="closingHsd" min="0" step=".001" placeholder="Closing stock"></div>
+<div class="field"><label>Opening MS stock (L)</label><input type="number" id="openingMs" min="0" step=".001" placeholder="Opening stock"></div>
+<div class="field"><label>Closing MS stock (L)</label><input type="number" id="closingMs" min="0" step=".001" placeholder="Closing stock"></div>
+</div><div id="reportContent"></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+// Basic local login gate. This is a convenience lock only, not server-side authentication.
+(function setupLogin(){
+ const KEY='jiobp_local_login_v1', gate=document.getElementById('loginGate'), form=document.getElementById('loginForm');
+ const saved=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}};
+ const setup=!saved();
+ document.getElementById('loginTitle').textContent=setup?'Create your login':'Login to your accounts';
+ document.getElementById('loginMessage').textContent=setup?'Create a username and password. Keep them safe.':'Enter your username and password to continue.';
+ document.getElementById('loginSubmit').textContent=setup?'Set login':'Login';
+ document.getElementById('confirmWrap').style.display=setup?'block':'none';
+ if(setup) document.getElementById('loginConfirm').required=true;
+ form.addEventListener('submit',function(e){e.preventDefault();const u=document.getElementById('loginUser').value.trim(),p=document.getElementById('loginPass').value,err=document.getElementById('loginError');
+   if(!u||p.length<4){err.textContent='Enter a username and a password of at least 4 characters.';return}
+   if(setup){if(p!==document.getElementById('loginConfirm').value){err.textContent='Passwords do not match.';return}localStorage.setItem(KEY,JSON.stringify({u:u,p:p}));gate.style.display='none';}
+   else {const c=saved();if(c&&c.u===u&&c.p===p){gate.style.display='none';}else{err.textContent='Incorrect username or password.'}}
+ });
+ document.getElementById('logoutBtn').addEventListener('click',()=>{gate.style.display='flex';document.getElementById('loginPass').value='';document.getElementById('loginError').textContent='';});
+})();
+
+const n=v=>Number(v)||0, fmt=v=>(Number(v)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let month=$('#month').value, data={sales:{},expenses:[],purchases:[],hsdAvgCommission:2,msAvgCommission:2.5,openingHsd:12000,closingHsd:8500,openingMs:8000,closingMs:6200};
+function storageKey(){return 'jiobp_manager_v2_'+month}
+function load(){month=$('#month').value;try{data=JSON.parse(localStorage.getItem(storageKey())||'{"sales":{},"expenses":[],"purchases":[]}')}catch(e){data={sales:{},expenses:[],purchases:[]}}data.sales=data.sales||{};data.expenses=data.expenses||[];data.purchases=data.purchases||[];['hsdAvgCommission','msAvgCommission','openingHsd','closingHsd','openingMs','closingMs'].forEach(k=>{let el=$('#'+k);if(el)el.value=data[k]??''});renderSaved();renderReport();$('#status').textContent='Data loaded'}
+function save(){try{localStorage.setItem(storageKey(),JSON.stringify(data));$('#status').textContent='Saved automatically · '+new Date().toLocaleTimeString()}catch(e){$('#status').textContent='Save failed — export backup'}}
+function inMonth(d){return (d||'').slice(0,7)===month}
+function formObj(form){return Object.fromEntries(new FormData(form).entries())}
+function amountSales(s){let h=n(s.hsdL)*n(s.hsdPrice),m=n(s.msL)*n(s.msPrice),sales=h+m,collection=['cash','card','mops','upi','federal','fleet'].reduce((a,k)=>a+n(s[k]),0);return {h,m,sales,collection,diff:sales-collection,litres:n(s.hsdL)+n(s.msL)}}
+function metric(label,value){return `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`}
+function table(headers,rows){return `<div class="tablewrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.map(r=>`<tr>${r.map(v=>`<td>${v??''}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${headers.length}" class="empty">No entries for this month yet.</td></tr>`}</tbody></table></div>`}
+function renderSaved(){
+let salesRows=Object.values(data.sales).filter(s=>inMonth(s.date)).sort((a,b)=>b.date.localeCompare(a.date)).map(s=>{let c=amountSales(s);return [s.date,`₹${fmt(c.sales)}`,`₹${fmt(c.collection)}`,`₹${fmt(c.diff)}`,`<button class="secondary" data-edit-sales="${s.date}">Edit</button> <button class="danger" data-del-sales="${s.date}">Delete</button>`]});
+$('#salesSaved').innerHTML='<h3>Saved daily sales records</h3>'+table(['Date','Fuel sales','Collections','Difference','Actions'],salesRows);
+let expRows=data.expenses.filter(x=>inMonth(x.date)).map(x=>[x.date,esc(x.category),'₹'+fmt(x.amount),esc(x.reference),esc(x.remarks),`<button class="danger" data-del-exp="${x.id}">Delete</button>`]);
+$('#expensesSaved').innerHTML='<h3>Saved expenses</h3>'+table(['Date','Category','Amount','Reference','Remarks','Actions'],expRows);
+let purRows=data.purchases.filter(x=>inMonth(x.date)).map(x=>[x.date,esc(x.invoice),esc(x.product),fmt(x.qty),'₹'+fmt(n(x.qty)*n(x.rate)+n(x.freight)+n(x.charges)+n(x.tax)),`<button class="danger" data-del-pur="${x.id}">Delete</button>`]);
+$('#purchasesSaved').innerHTML='<h3>Saved purchases</h3>'+table(['Date','Invoice','Product','Qty (L)','Total amount','Actions'],purRows);
+}
+function renderReport(){
+let sales=Object.values(data.sales).filter(s=>inMonth(s.date)),expenses=data.expenses.filter(x=>inMonth(x.date)),purchases=data.purchases.filter(x=>inMonth(x.date));
+let totalSales=sales.reduce((a,s)=>a+amountSales(s).sales,0),hsdL=sales.reduce((a,s)=>a+n(s.hsdL),0),msL=sales.reduce((a,s)=>a+n(s.msL),0);
+let collectionKeys=[['cash','Cash'],['card','Cards'],['mops','MOPs'],['upi','UPI'],['federal','Federal account'],['fleet','Fleet / credit']];
+let collectionTotals=Object.fromEntries(collectionKeys.map(([k,label])=>[k,sales.reduce((a,s)=>a+n(s[k]),0)]));
+let totalCollections=Object.values(collectionTotals).reduce((a,v)=>a+v,0);
+let hsdAvg=n(data.hsdAvgCommission),msAvg=n(data.msAvgCommission),hsdCommission=hsdL*hsdAvg,msCommission=msL*msAvg,totalCommission=hsdCommission+msCommission;
+let expenseTotal=expenses.reduce((a,x)=>a+n(x.amount),0),purchaseTotal=purchases.reduce((a,p)=>a+n(p.qty)*n(p.rate)+n(p.freight)+n(p.charges)+n(p.tax),0);
+let hsdPurchases=purchases.filter(p=>p.product==='HSD'),msPurchases=purchases.filter(p=>p.product==='MS');
+let qtyTotal=arr=>arr.reduce((a,p)=>a+n(p.qty),0), amountTotal=arr=>arr.reduce((a,p)=>a+n(p.qty)*n(p.rate)+n(p.freight)+n(p.charges)+n(p.tax),0);
+let openingHsd=n(data.openingHsd),closingHsd=n(data.closingHsd),openingMs=n(data.openingMs),closingMs=n(data.closingMs);
+let categoryTotals={};expenses.forEach(x=>categoryTotals[x.category]=(categoryTotals[x.category]||0)+n(x.amount));
+let salesRows=sales.sort((a,b)=>a.date.localeCompare(b.date)).map(s=>{let c=amountSales(s);return [s.date,fmt(s.hsdL),fmt(c.h),fmt(s.msL),fmt(c.m),fmt(c.sales),fmt(c.collection),fmt(c.diff)]});
+let expRows=expenses.map(x=>[x.date,esc(x.category),fmt(x.amount),esc(x.reference),esc(x.remarks)]);
+let purRows=purchases.map(x=>[x.date,esc(x.invoice),esc(x.product),fmt(x.qty),fmt(x.rate),fmt(x.freight),fmt(x.charges),fmt(x.tax),fmt(n(x.qty)*n(x.rate)+n(x.freight)+n(x.charges)+n(x.tax)),fmt(x.sellingPrice)]);
+$('#reportContent').innerHTML=`<div class="cards">${metric('MTD HSD sales (L)',fmt(hsdL))}${metric('MTD MS sales (L)',fmt(msL))}${metric('MTD total fuel sales','₹'+fmt(totalSales))}${metric('MTD total collection','₹'+fmt(totalCollections))}${metric('MTD commission income','₹'+fmt(totalCommission))}${metric('MTD expenses','₹'+fmt(expenseTotal))}</div>
+<nav class="tabs report-tabs no-print"><button class="active" data-report="reportSales">Report 1 · Sales & Accounts</button><button data-report="reportExpenses">Report 2 · Expenses</button><button data-report="reportPurchases">Report 3 · Purchase</button><button data-report="reportPL">Report 4 · Profit & Loss</button></nav>
+<section class="report-panel" id="reportSales"><button class="secondary print-report-btn no-print" onclick="printSingleReport('reportSales')">Print / Save Report 1 PDF (A4)</button><h3>Report 1 — Sales & Accounts</h3>${table(['Date','HSD L','HSD Amount ₹','MS L','MS Amount ₹','Total Sales ₹','Cash ₹','Cards ₹','MOPs ₹','UPI ₹','Federal ₹','Fleet/Credit ₹','Total Collection ₹','Difference ₹'],sales.sort((a,b)=>a.date.localeCompare(b.date)).map(s=>{let c=amountSales(s);return [s.date,fmt(s.hsdL),fmt(c.h),fmt(s.msL),fmt(c.m),fmt(c.sales),fmt(s.cash),fmt(s.card),fmt(s.mops),fmt(s.upi),fmt(s.federal),fmt(s.fleet),fmt(c.collection),fmt(c.diff)]}))}${table(['Collection type','MTD amount ₹'],collectionKeys.map(([k,label])=>[label,fmt(collectionTotals[k])]).concat([['Total MTD collection',fmt(totalCollections)]]))}</section>
+<section class="report-panel hidden" id="reportExpenses"><button class="secondary print-report-btn no-print" onclick="printSingleReport('reportExpenses')">Print / Save Report 2 PDF (A4)</button><h3>Report 2 — Expenses</h3><div class="cards">${metric('MTD expenses','₹'+fmt(expenseTotal))}${metric('MOPs expenses','₹'+fmt(categoryTotals['MOPs']||0))}</div>${table(['Expense category','MTD amount ₹'],Object.keys(categoryTotals).sort().map(k=>[esc(k),fmt(categoryTotals[k])]).concat([['Total MTD expenses',fmt(expenseTotal)]]))}${table(['Date','Category','Amount ₹','Bill reference','Remarks'],expRows)}</section>
+<section class="report-panel hidden" id="reportPurchases"><button class="secondary print-report-btn no-print" onclick="printSingleReport('reportPurchases')">Print / Save Report 3 PDF (A4)</button><h3>Report 3 — Purchase</h3>${table(['Product','Purchase quantity (L)','Purchase amount ₹'],[['HSD',fmt(qtyTotal(hsdPurchases)),fmt(amountTotal(hsdPurchases))],['MS',fmt(qtyTotal(msPurchases)),fmt(amountTotal(msPurchases))],['Total',fmt(qtyTotal(purchases)),fmt(purchaseTotal)]])}${table(['Date','Invoice','Product','Qty (L)','Rate ₹/L','Freight ₹','Charges ₹','Tax ₹','Total amount ₹','Selling price ₹/L'],purRows)}</section>
+<section class="report-panel hidden" id="reportPL"><button class="secondary print-report-btn no-print" onclick="printSingleReport('reportPL')">Print / Save Report 4 PDF (A4)</button><h3>Report 4 — Profit & Loss</h3>${table(['Particulars','Calculation / basis','Amount ₹'],[['HSD commission income',fmt(hsdL)+' L × ₹'+fmt(hsdAvg)+'/L',fmt(hsdCommission)],['MS commission income',fmt(msL)+' L × ₹'+fmt(msAvg)+'/L',fmt(msCommission)],['Total commission income','HSD + MS commission',fmt(totalCommission)],['MTD collection','Shown for reconciliation only',fmt(totalCollections)],['MTD expenses','All expense categories including MOPs',fmt(expenseTotal)],['Estimated operating profit','Total commission income − MTD expenses',fmt(totalCommission-expenseTotal)]])}<h4>Opening & Closing Stock Difference</h4>${table(['Product','Opening stock (L)','Closing stock (L)','Opening − Closing (L)'],[['HSD',fmt(openingHsd),fmt(closingHsd),fmt(openingHsd-closingHsd)],['MS',fmt(openingMs),fmt(closingMs),fmt(openingMs-closingMs)]])}<p class="hint">Collection is not treated as income in the profit calculation. Stock difference is opening minus closing; it is not by itself a stock-loss calculation. Operating profit is estimated commission income minus recorded expenses.</p></section>`;
+const reportButtons=$$('#reportContent [data-report]');reportButtons.forEach(b=>b.addEventListener('click',()=>{reportButtons.forEach(x=>x.classList.toggle('active',x===b));$$('#reportContent .report-panel').forEach(p=>p.classList.toggle('hidden',p.id!==b.dataset.report))}));
+}
+$('#salesEntry').addEventListener('submit',e=>{e.preventDefault();let s=formObj(e.target);data.sales[s.date]=s;save();renderSaved();renderReport();e.target.reset();e.target.date.value=month+'-01';alert('Sales record saved.')});
+$('#loadSales').addEventListener('click',()=>{let d=$('#salesEntry [name=date]').value;let s=data.sales[d];if(!s){alert('No saved sales record for '+d);return}Object.entries(s).forEach(([k,v])=>{let el=$(`#salesEntry [name="${k}"]`);if(el)el.value=v})});
+$('#expenseEntry').addEventListener('submit',e=>{e.preventDefault();let x=formObj(e.target);x.id=crypto.randomUUID?crypto.randomUUID():String(Date.now());x.amount=n(x.amount);data.expenses.push(x);save();renderSaved();renderReport();e.target.reset();e.target.date.value=month+'-01';alert('Expense saved.')});
+$('#purchaseEntry').addEventListener('submit',e=>{e.preventDefault();let x=formObj(e.target);x.id=crypto.randomUUID?crypto.randomUUID():String(Date.now());['qty','rate','freight','charges','tax','sellingPrice'].forEach(k=>x[k]=n(x[k]));data.purchases.push(x);save();renderSaved();renderReport();e.target.reset();e.target.date.value=month+'-01';alert('Purchase saved.')});
+document.addEventListener('click',e=>{let t=e.target;if(t.dataset.editSales){let s=data.sales[t.dataset.editSales];Object.entries(s).forEach(([k,v])=>{let el=$(`#salesEntry [name="${k}"]`);if(el)el.value=v});showTab('salesForm');scrollTo(0,0)}if(t.dataset.delSales){if(confirm('Delete sales record for '+t.dataset.delSales+'?')){delete data.sales[t.dataset.delSales];save();renderSaved();renderReport()}}if(t.dataset.delExp){data.expenses=data.expenses.filter(x=>x.id!==t.dataset.delExp);save();renderSaved();renderReport()}if(t.dataset.delPur){data.purchases=data.purchases.filter(x=>x.id!==t.dataset.delPur);save();renderSaved();renderReport()}});
+function showTab(id){$$('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));$$('main > section.panel').forEach(s=>{s.classList.toggle('hidden',s.id!==id);s.classList.toggle('report',id==='report'&&s.id===id)})}
+$$('.tabs button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+['hsdAvgCommission','msAvgCommission','openingHsd','closingHsd','openingMs','closingMs'].forEach(k=>$('#'+k).addEventListener('input',e=>{data[k]=n(e.target.value);save();renderReport()}));
+$('#month').addEventListener('change',()=>{month=$('#month').value;load()});
+function download(text,name,type){let url=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('#backup').addEventListener('click',()=>download(JSON.stringify({app:'Jio-bp Accounts Manager',month,data},null,2),`JioBP_Backup_${month}.json`,'application/json'));
+$('#restore').addEventListener('click',()=>$('#backupFile').click());
+$('#backupFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!x.data||!x.data.sales)throw Error('This is not a compatible backup');if(!confirm('Restore backup for '+x.month+'? This replaces this month’s data.'))return;month=x.month;$('#month').value=month;data=x.data;save();renderSaved();renderReport();alert('Backup restored.')}catch(err){alert('Import failed: '+err.message)}e.target.value=''});
+$('#demo').addEventListener('click',()=>{if(!confirm('Load illustrative demo data for October 2026? This replaces saved records for the selected month. Export a backup first if needed.'))return;
+data={sales:{},expenses:[],purchases:[],hsdAvgCommission:2,msAvgCommission:2.5,openingHsd:12000,closingHsd:8500,openingMs:8000,closingMs:6200};
+const demoSales=[
+{date:month+'-01',hsdL:1200,hsdPrice:95.70,msL:650,msPrice:102.50,cash:65000,card:28000,cardRef:'CARD-001',upi:22000,upiRef:'UPI-001',federal:15000,fleet:18000,notes:'Demo shift 1'},
+{date:month+'-02',hsdL:1350,hsdPrice:95.70,msL:700,msPrice:102.50,cash:70000,card:30000,cardRef:'CARD-002',upi:24000,upiRef:'UPI-002',federal:17000,fleet:20000,notes:'Demo shift 2'},
+{date:month+'-03',hsdL:1280,hsdPrice:95.70,msL:680,msPrice:102.50,cash:68000,card:29000,cardRef:'CARD-003',upi:23000,upiRef:'UPI-003',federal:16000,fleet:19000,notes:'Demo shift 3'}
+];
+demoSales.forEach(x=>data.sales[x.date]=x);
+const demoExpenses=[
+['2026-10-01','Food',450,'BILL-101','Staff food'],['2026-10-01','MOPs',1200,'MOPS-101','Cleaning and maintenance consumables'],['2026-10-02','Electricity',1800,'EB-102','Daily allocation example'],['2026-10-02','DG Expenses',950,'DG-102','Generator running cost'],['2026-10-03','RO Repairs',700,'REP-103','Minor repair'],['2026-10-03','Coffee',250,'COF-103','Coffee expense'],['2026-10-03','Salaries',2500,'SAL-103','Sample daily salary allocation']
+];
+demoExpenses.forEach(x=>data.expenses.push({id:'demo-'+Math.random().toString(36).slice(2),date:x[0],category:x[1],amount:x[2],reference:x[3],remarks:x[4]}));
+const demoPurchases=[
+{ id:'demo-p1',date:'2026-10-01',invoice:'INV-HSD-101',product:'HSD',qty:5000,rate:85.5,freight:2500,charges:500,tax:0,sellingPrice:95.7,supplier:'Demo Supplier',remarks:'Illustrative only'},
+{ id:'demo-p2',date:'2026-10-02',invoice:'INV-MS-102',product:'MS',qty:3000,rate:91.5,freight:1800,charges:400,tax:0,sellingPrice:102.5,supplier:'Demo Supplier',remarks:'Illustrative only'}
+];
+data.purchases=demoPurchases;['hsdAvgCommission','msAvgCommission','openingHsd','closingHsd','openingMs','closingMs'].forEach(k=>{let el=$('#'+k);if(el)el.value=data[k]??''});save();renderSaved();renderReport();showTab('report');alert('Demo data loaded. These are fictional example figures, not actual Jio-bp outlet data.');});
+function printSingleReport(id){showTab('report');$$('#reportContent .report-panel').forEach(p=>{p.classList.toggle('print-target',p.id===id);p.classList.toggle('hidden',p.id!==id)});document.body.classList.remove('print-sales','print-expenses','print-purchases','print-pl');document.body.classList.add(({reportSales:'print-sales',reportExpenses:'print-expenses',reportPurchases:'print-purchases',reportPL:'print-pl'})[id]);window.print();setTimeout(()=>{document.body.classList.remove('print-sales','print-expenses','print-purchases','print-pl');$$('#reportContent .report-panel').forEach(p=>{p.classList.remove('print-target');p.classList.toggle('hidden',p.id!==id)});},500)}
+$('#print').addEventListener('click',()=>{showTab('report');document.body.classList.remove('print-sales','print-expenses','print-purchases','print-pl');$$('#reportContent .report-panel').forEach(p=>p.classList.remove('print-target'));window.print()});
+$('#csv').addEventListener('click',()=>{let lines=[['Report','Value'],['Month',month],['Sales records',Object.keys(data.sales).filter(k=>inMonth(k)).length],['HSD average commission ₹/L',n(data.hsdAvgCommission)],['MS average commission ₹/L',n(data.msAvgCommission)],['Opening HSD stock L',n(data.openingHsd)],['Closing HSD stock L',n(data.closingHsd)],['Opening MS stock L',n(data.openingMs)],['Closing MS stock L',n(data.closingMs)],['Expenses total',data.expenses.filter(x=>inMonth(x.date)).reduce((s,x)=>s+n(x.amount),0)],['Purchases total',data.purchases.filter(x=>inMonth(x.date)).reduce((s,x)=>s+n(x.qty)*n(x.rate)+n(x.freight)+n(x.charges)+n(x.tax),0)]];download(lines.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\r\n'),`JioBP_Monthly_Summary_${month}.csv`,'text/csv')});
+load();
+</script></body></html>
